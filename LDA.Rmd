@@ -8,7 +8,7 @@ significance of the variables and we can make predictions.
 To make this model we need an explanatory matrix X and a response matrix Y.
 We will use the iris database as example.
 
-![Iris](https://www.google.co.jp/url?sa=i&rct=j&q=&esrc=s&source=images&cd=&cad=rja&uact=8&ved=2ahUKEwiEiMrDs4TcAhXZc94KHa0DA_oQjRx6BAgBEAU&url=https%3A%2F%2Fwww.palass.org%2Fpublications%2Fnewsletter%2Fpalaeomath-101%2Fpalaeomath-part-10-groups-i&psig=AOvVaw1xACKJnOklPvq1RMLEUeM3&ust=1530757854877316)
+![Iris Species](/Users/hp/Documents/GitHub/dvalls/Files/iris.png)
 
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE, echo=FALSE}
 library(ade4)
