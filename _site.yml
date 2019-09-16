@@ -1,6 +1,6 @@
 name: 'David Valls Resume'
 navbar: 
-  title: "Statopia"
+  title: "David Valls Resume"
   left: 
     - text: "About me"
       href: index.html
