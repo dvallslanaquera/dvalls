@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>XGBoost</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+<link rel="stylesheet" href="styles.css" type="text/css" />
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">David Valls Resume</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">About me</a>
+</li>
+<li>
+  <a href="xgboost.html">XGBoost</a>
+</li>
+<li>
+  <a href="tumor.html">Tumor analysis</a>
+</li>
+<li>
+  <a href="Clustering.html">Clustering</a>
+</li>
+<li>
+  <a href="LDA.html">LDA</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">XGBoost</h1>
+
+</div>
+
+
+<div id="xgboost" class="section level1">
+<h1>XGBoost</h1>
+<p>XGBoost is a machine learning technique for both regression and classification problems. It consists of an ensemble of sequential simple decision trees to generalize the final result of them by a LOSS function.</p>
+<p>This method gained in popularity the last few years, being the most used method along with the LightGBM technique.</p>
+<p>There are a lot of things to take into consideration when tunning this model. While bagging techniques create weak decision trees and then they calculate the average between them, when using a boosting technique like XGBoost around 5 nodes of decision trees are created and then the algorithm calculates a rolling average from one to the following. One of the pros of this is that the learning curve is smoother compared to bagging models, so the model can steadily learn from the errors, trying at every loop to minimize the MSE LOSS function, and thus avoiding overfitting more efficiently.</p>
+<pre class="r"><code># Load required libraries
+library(tidyverse)
+library(data.table)
+library(magrittr)
+library(ggridges)
+library(xgboost)
+library(rpart)
+library(gridExtra)
+library(vtreat)
+
+# Load databases
+train &lt;- fread(&#39;/Users/hp/Documents/GitHub/dvalls/archives/titanic_train.csv&#39;)
+test &lt;- fread(&#39;/Users/hp/Documents/GitHub/dvalls/archives/titanic_test.csv&#39;)</code></pre>
+</div>
+<div id="database-cleaning-up" class="section level1">
+<h1>Database cleaning up</h1>
+<pre class="r"><code># Combine both datasets 
+test$Survived &lt;- NA
+train2 &lt;- rbind(train, test)
+
+# Simplifying the titles to reduce noise
+train2$Title &lt;- sapply(train2$Name, function(x) {strsplit(x, split = &#39;[,.]&#39;)[[1]][[2]]})
+train2$Title &lt;- trimws(train2$Title, &#39;left&#39;)
+train2$Title[train2$Title %in% c(&#39;Mme&#39;, &#39;Mlle&#39;)] &lt;- &#39;Mlle&#39;
+train2$Title[train2$Title %in% c(&#39;Capt&#39;, &#39;Don&#39;, &#39;Major&#39;, &#39;Sir&#39;)] &lt;- &#39;Sir&#39;
+train2$Title[train2$Title %in% c(&#39;Dona&#39;, &#39;Lady&#39;, &#39;the Countess&#39;, &#39;Jonkheer&#39;)] &lt;- &#39;Lady&#39;
+train2$Title &lt;- factor(train2$Title)
+
+# Creating a family size variable
+train2 %&lt;&gt;% 
+  mutate(family_size = SibSp + Parch + 1) 
+
+# Imputing values to the missing values
+fit_age &lt;- rpart(Age ~ Sex + Pclass + Fare + Embarked + Title, data = train2)
+train2$Age[is.na(train2$Age)] &lt;- predict(fit_age, newdata = train2[is.na(train2$Age),])
+
+# Fill gaps in Embarked and Fare
+train2$Embarked &lt;- ifelse(train2$Embarked == &#39;&#39;, &#39;S&#39;, train2$Embarked) %&gt;% as.factor()
+fare_fit &lt;- rpart(Fare ~ Age + Sex + Pclass + Embarked + Title, data = train2)
+train2$Fare[is.na(train2$Fare)] &lt;- predict(fare_fit, newdata = train2[is.na(train2$Fare),])
+
+# All the missing values are now filled and the dataset is ready to be trained
+summary(train2)</code></pre>
+<pre><code>##   PassengerId      Survived          Pclass          Name          
+##  Min.   :   1   Min.   :0.0000   Min.   :1.000   Length:1309       
+##  1st Qu.: 328   1st Qu.:0.0000   1st Qu.:2.000   Class :character  
+##  Median : 655   Median :0.0000   Median :3.000   Mode  :character  
+##  Mean   : 655   Mean   :0.3838   Mean   :2.295                     
+##  3rd Qu.: 982   3rd Qu.:1.0000   3rd Qu.:3.000                     
+##  Max.   :1309   Max.   :1.0000   Max.   :3.000                     
+##                 NA&#39;s   :418                                        
+##      Sex                 Age            SibSp            Parch      
+##  Length:1309        Min.   : 0.17   Min.   :0.0000   Min.   :0.000  
+##  Class :character   1st Qu.:22.00   1st Qu.:0.0000   1st Qu.:0.000  
+##  Mode  :character   Median :28.86   Median :0.0000   Median :0.000  
+##                     Mean   :29.59   Mean   :0.4989   Mean   :0.385  
+##                     3rd Qu.:36.50   3rd Qu.:1.0000   3rd Qu.:0.000  
+##                     Max.   :80.00   Max.   :8.0000   Max.   :9.000  
+##                                                                     
+##     Ticket               Fare            Cabin           Embarked
+##  Length:1309        Min.   :  0.000   Length:1309        C:270   
+##  Class :character   1st Qu.:  7.896   Class :character   Q:123   
+##  Mode  :character   Median : 14.454   Mode  :character   S:916   
+##                     Mean   : 33.282                              
+##                     3rd Qu.: 31.275                              
+##                     Max.   :512.329                              
+##                                                                  
+##      Title      family_size    
+##  Mr     :757   Min.   : 1.000  
+##  Miss   :260   1st Qu.: 1.000  
+##  Mrs    :197   Median : 1.000  
+##  Master : 61   Mean   : 1.884  
+##  Dr     :  8   3rd Qu.: 2.000  
+##  Rev    :  8   Max.   :11.000  
+##  (Other): 18</code></pre>
+<pre class="r"><code># Pick just the interesting columns
+train3 &lt;- train2[, c(2, 3, 5, 6, 7, 8, 10, 12, 13, 14)]
+
+# Divide back to train/test split
+train_m &lt;- train3[!is.na(train3$Survived),]
+test_m &lt;- train3[is.na(train3$Survived),]</code></pre>
+</div>
+<div id="exploratory-analysis" class="section level1">
+<h1>Exploratory Analysis</h1>
+<pre class="r"><code># Let&#39;s predict survivors 
+# Surviving Rate By Sex
+train %&gt;% 
+  group_by(Sex) %&gt;% 
+  summarise(total = n(),
+            survived = sum(Survived),
+            non_survived = sum(ifelse(Survived == 1, 0, 1))) %&gt;%
+  gather(key, num, survived, non_survived) %&gt;% 
+  mutate(prop = num / total) %&gt;% 
+  ggplot(aes(x = Sex, y = num, fill = key)) +
+    geom_col(position=&#39;fill&#39;) +
+    geom_label(aes(label = paste(num, &#39;-&#39;, round(prop * 100, 2), &#39;%&#39;)),
+                   position = &#39;fill&#39;) +
+    labs(x = &#39;Sex&#39;, y = &#39;Proportion&#39;, fill = &#39;&#39;) +
+    theme_minimal() +
+    theme(axis.text = element_text(size = 12),
+          plot.title = element_text(size = 20),
+          legend.text = element_text(size = 12)) +
+    scale_y_continuous(breaks = c(0, .25, .5, .75, 1),
+                       labels = c(&#39;0%&#39;, &#39;25%&#39;, &#39;50%&#39;, &#39;75%&#39;, &#39;100%&#39;)) +
+    scale_fill_discrete(labels = c(&quot;Non Survived&quot;, &quot;Survived&quot;)) +
+    ggtitle(&#39;Surviving Rate by Sex&#39;)</code></pre>
+<p><img src="xgboost_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
+<pre class="r"><code># Surviving by Fare
+train %&gt;% 
+  filter(Fare &lt; 300) %&gt;% 
+  ggplot(aes(x = Fare)) +
+    geom_density(aes(fill = factor(Survived)), alpha = .5, size = 1.2) +
+    theme_bw() +
+    theme(axis.text = element_text(size = 12),
+          plot.title = element_text(size = 20),
+          legend.title = element_blank(),
+          legend.text = element_text(size = 12)) +
+    labs(x = &#39;Fare&#39;, y = &#39;Density&#39;) +
+    scale_fill_discrete(labels = c(&quot;Non Survived&quot;, &quot;Survived&quot;)) +
+    ggtitle(&#39;Surviving Rate by Fare&#39;)</code></pre>
+<p><img src="xgboost_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+</div>
+<div id="model-fit" class="section level1">
+<h1>Model fit</h1>
+<pre class="r"><code>set.seed(123)
+
+# Create the tunning grid
+hyper_grid &lt;- expand.grid(
+  eta = c(.05, .1, .2, .3),
+  gamma = c(.5, 1, 1.2, 1.5),
+  max_depth = c(3, 5, 7, 9),
+  min_child_weight = c(1, 3, 5, 7),
+  subsample = c(.5, .65, .8, 1),
+  colsample_bytree = c(.7, .8, .9, 1),
+  #optimal_trees = 0, 
+  test_error_mean = 0
+)
+nrow(hyper_grid)</code></pre>
+<pre><code>## [1] 4096</code></pre>
+<p>There are 4096 possible model combinations. That’s gonna take a bit to run…</p>
+<p>Now all we need is to create a for loop to iterate every possible combination of the previous grid.</p>
+<p>That took well over 1 hour to run on my laptop. Now let’s take a look at the best parameter combination to fit our predictive model.</p>
+<pre class="r"><code># Results in xgb.tune$evaluation_log!
+hyper_grid %&gt;%
+  dplyr::arrange(test_error_mean) %&gt;%
+  head(10)</code></pre>
+<pre><code>##     eta gamma max_depth min_child_weight subsample colsample_bytree
+## 1  0.10   1.2         7                1      1.00              0.9
+## 2  0.30   1.0         7                1      0.65              0.9
+## 3  0.30   1.2         5                3      1.00              0.8
+## 4  0.20   1.0         9                1      0.65              1.0
+## 5  0.20   1.5         9                1      0.80              0.9
+## 6  0.30   1.5         7                5      0.65              0.8
+## 7  0.10   0.5         5                1      0.80              1.0
+## 8  0.05   0.5         7                1      0.80              0.7
+## 9  0.10   0.5         9                1      1.00              0.8
+## 10 0.20   1.0         7                1      0.65              0.7
+##    test_error_mean
+## 1        0.1538028
+## 2        0.1560228
+## 3        0.1560288
+## 4        0.1560290
+## 5        0.1570472
+## 6        0.1571106
+## 7        0.1571148
+## 8        0.1583476
+## 9        0.1593200
+## 10       0.1593328</code></pre>
+<pre class="r"><code>hyper_grid %&gt;%
+  dplyr::arrange(test_error_mean) %&gt;%
+  tail(10)</code></pre>
+<pre><code>##       eta gamma max_depth min_child_weight subsample colsample_bytree
+## 4087 0.05   1.0         3                7       0.5              0.9
+## 4088 0.05   1.5         3                7       0.5              0.7
+## 4089 0.05   1.0         5                7       0.5              1.0
+## 4090 0.05   1.2         3                7       0.5              1.0
+## 4091 0.05   0.5         5                7       0.5              0.9
+## 4092 0.05   1.5         5                7       0.5              1.0
+## 4093 0.05   0.5         7                7       0.5              0.8
+## 4094 0.05   1.0         9                7       0.5              0.9
+## 4095 0.10   0.5         5                7       0.5              0.9
+## 4096 0.05   1.2         9                7       0.5              0.7
+##      test_error_mean
+## 4087       0.2076608
+## 4088       0.2087626
+## 4089       0.2087690
+## 4090       0.2097820
+## 4091       0.2133104
+## 4092       0.2145346
+## 4093       0.2154506
+## 4094       0.2154666
+## 4095       0.2154854
+## 4096       0.2223244</code></pre>
+<pre class="r"><code># Definitive model picking the best parameters
+params_final &lt;- list(
+  eta = 0.05,
+  gamma = 1.5, 
+  max_depth = 5, 
+  min_child_weight = 1,
+  subsample = 0.8,
+  colsample_bytree = .9
+)
+
+xgb.fit &lt;- xgb.cv(
+  params = params_final,
+  data = data.matrix(train_m[,-1]),
+  label = train_m[,1],
+  nrounds = 500,
+  nfold = 5,
+  objective = &#39;binary:logistic&#39;,
+  #verbose = 0,
+  early_stopping_rounds = 10,
+  print_every_n = 100
+)</code></pre>
+<pre><code>## Warning in data.matrix(train_m[, -1]): NAs introduced by coercion</code></pre>
+<pre><code>## [1]  train-error:0.176784+0.044692   test-error:0.204031+0.079640 
+## Multiple eval metrics are present. Will use test_error for early stopping.
+## Will train until test_error hasn&#39;t improved in 10 rounds.
+## 
+## Stopping. Best iteration:
+## [3]  train-error:0.141408+0.007210   test-error:0.167072+0.040905</code></pre>
+<pre class="r"><code># Train error: 0.13, test error: 0.17</code></pre>
+</div>
+
+<p>Copyright &copy; 2019 David Valls Lanaquera All rights reserved </p>
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

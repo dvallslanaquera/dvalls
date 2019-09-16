@@ -25,6 +25,44 @@ train <- fread('/Users/hp/Documents/GitHub/dvalls/archives/titanic_train.csv')
 test <- fread('/Users/hp/Documents/GitHub/dvalls/archives/titanic_test.csv')
 ```
 
+# Database cleaning up
+```{r}
+# Combine both datasets 
+test$Survived <- NA
+train2 <- rbind(train, test)
+
+# Simplifying the titles to reduce noise
+train2$Title <- sapply(train2$Name, function(x) {strsplit(x, split = '[,.]')[[1]][[2]]})
+train2$Title <- trimws(train2$Title, 'left')
+train2$Title[train2$Title %in% c('Mme', 'Mlle')] <- 'Mlle'
+train2$Title[train2$Title %in% c('Capt', 'Don', 'Major', 'Sir')] <- 'Sir'
+train2$Title[train2$Title %in% c('Dona', 'Lady', 'the Countess', 'Jonkheer')] <- 'Lady'
+train2$Title <- factor(train2$Title)
+
+# Creating a family size variable
+train2 %<>% 
+  mutate(family_size = SibSp + Parch + 1) 
+
+# Imputing values to the missing values
+fit_age <- rpart(Age ~ Sex + Pclass + Fare + Embarked + Title, data = train2)
+train2$Age[is.na(train2$Age)] <- predict(fit_age, newdata = train2[is.na(train2$Age),])
+
+# Fill gaps in Embarked and Fare
+train2$Embarked <- ifelse(train2$Embarked == '', 'S', train2$Embarked) %>% as.factor()
+fare_fit <- rpart(Fare ~ Age + Sex + Pclass + Embarked + Title, data = train2)
+train2$Fare[is.na(train2$Fare)] <- predict(fare_fit, newdata = train2[is.na(train2$Fare),])
+
+# All the missing values are now filled and the dataset is ready to be trained
+summary(train2)
+
+# Pick just the interesting columns
+train3 <- train2[, c(2, 3, 5, 6, 7, 8, 10, 12, 13, 14)]
+
+# Divide back to train/test split
+train_m <- train3[!is.na(train3$Survived),]
+test_m <- train3[is.na(train3$Survived),]
+```
+
 # Exploratory Analysis
 ```{r}
 # Let's predict survivors 
@@ -67,44 +105,6 @@ train %>%
     ggtitle('Surviving Rate by Fare')
 ```
 
-```{r}
-# Feature  engineering
-# Combining test and train datasets 
-combi <- rbind(train, test)
-
-# 1. Choose interesting variables
-train2 <- train %>% 
-            select(Survived, Pclass, Sex, Age = Age_wiki, Fare, SibSp, Parch)
-
-# 2. Input missing Age using a Decision Tree
-fit_age <- rpart(Age ~ SibSp + Parch + Pclass, data = train2)
-train2$Age[is.na(train2$Age)] <- predict(fit_age, newdata = train2[is.na(train2$Age),])
-
-# 3. Add a variable for family size
-train2 %<>% 
-  mutate(family_size = SibSp + Parch + 1) %>% 
-  select(-SibSp, -Parch)
-
-train3 <- train2 %>% 
-            select(Survived, Pclass, Age, Fare, family_size) 
-```
-
-```{r}
-# Surviving by Fare
-train %>% 
-  filter(Fare < 300) %>% 
-  ggplot(aes(x = Fare)) +
-    geom_density(aes(fill = factor(Survived)), alpha = .5, size = 1.2) +
-    theme_bw() +
-    theme(axis.text = element_text(size = 12),
-          plot.title = element_text(size = 20),
-          legend.title = element_blank(),
-          legend.text = element_text(size = 12)) +
-    labs(x = 'Fare', y = 'Density') +
-    scale_fill_discrete(labels = c("Non Survived", "Survived")) +
-    ggtitle('Surviving Rate by Fare')
-```
-
 # Model fit
 
 ```{r}
@@ -125,7 +125,9 @@ nrow(hyper_grid)
 ```
 There are 4096 possible model combinations. That's gonna take a bit to run... 
 
-```{r eval=FALSE, include=FALSE}
+Now all we need is to create a for loop to iterate every possible combination of the previous grid.
+
+```{r include=FALSE}
 # 3. For loop (It took me 1 hour to run it!)
 # grid search 
 for (i in 1:nrow(hyper_grid)) {
@@ -139,13 +141,13 @@ for (i in 1:nrow(hyper_grid)) {
   )
   xgb.tune <- xgb.cv(
     params = params,
-    data = data.matrix(train3[,-1]),
-    label = train3[,1],
+    data = data.matrix(train_m[,-1]),
+    label = train_m[,1],
     nrounds = 500,
     nfold = 5,
-    objective = 'binary:logistic',  # classificatory model
+    objective = 'binary:logistic',
     verbose = 0,
-    early_stopping_rounds = 10      # 
+    early_stopping_rounds = 10
   )
   # add min training error and trees to grid
   #hyper_grid$optimal_trees[i] <- which.min(xgb.tune$evaluation_log$test_rmse_mean)
@@ -156,27 +158,31 @@ for (i in 1:nrow(hyper_grid)) {
 That took well over 1 hour to run on my laptop. Now let's take a look at the best parameter combination to fit our predictive model.
 
 ```{r}
+# Results in xgb.tune$evaluation_log!
 hyper_grid %>%
-  dplyr::arrange(min_RMSE) %>%
+  dplyr::arrange(test_error_mean) %>%
   head(10)
+
+hyper_grid %>%
+  dplyr::arrange(test_error_mean) %>%
+  tail(10)
 ```
 
 ```{r}
-# Let's pick up the best model
-# Definitive model
+# Definitive model picking the best parameters
 params_final <- list(
-  eta = 0.3,
-  gamma = 1.2, 
-  max_depth = 3, 
+  eta = 0.05,
+  gamma = 1.5, 
+  max_depth = 5, 
   min_child_weight = 1,
-  subsample = 1,
+  subsample = 0.8,
   colsample_bytree = .9
 )
 
 xgb.fit <- xgb.cv(
   params = params_final,
-  data = data.matrix(train3[,-1]),
-  label = train3[,1],
+  data = data.matrix(train_m[,-1]),
+  label = train_m[,1],
   nrounds = 500,
   nfold = 5,
   objective = 'binary:logistic',
@@ -185,17 +191,6 @@ xgb.fit <- xgb.cv(
   print_every_n = 100
 )
 
-xgb.fit <- xgboost(
-  params = params_final,
-  data = data.matrix(train3[,-1]),
-  label = train3[,1],
-  nrounds = 500,
-  nfold = 5,
-  objective = 'binary:logistic',
-  #verbose = 0,
-  early_stopping_rounds = 10,
-  print_every_n = 100
-)
-# Test error: 0.24 
-
+# Train error: 0.13, test error: 0.17
 ```
+
