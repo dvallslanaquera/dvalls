@@ -1,0 +1,20 @@
+name: 'David Valls Resume'
+navbar: 
+  title: "Statopia"
+  left: 
+    - text: "About me"
+      href: index.html
+    - text: "Tumor analysis"
+      href: tumor.html
+    - text: "Clustering"
+      href: Clustering.html
+    - text: "LDA"
+      href: LDA.html
+output:
+  html_document: 
+    theme: cosmo
+    highlight: textmate
+    include:
+      after_body: footer.html
+    css: styles.css
+output_dir: "."
