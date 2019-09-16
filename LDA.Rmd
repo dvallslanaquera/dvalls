@@ -18,11 +18,13 @@ library(mvnormtest)
 library(psych)
 library(MASS)
 library(klaR)
+library(fBasics)
+library(tidyverse)
 data(iris)
 ```
 
 ```{r tables-mtcars, echo=FALSE}
-knitr::kable(iris[1:5, ], caption = 'A caption of the Iris database')
+knitr::kable(iris[1:10, ], caption = 'A caption of the Iris database')
 ```
 
 ## 1- Standarization and exploration
@@ -44,7 +46,7 @@ The LDA model is a parametric model, so there are assumptions to check and contr
 ```{r}
 any(is.na(iris))
 ```
-There are not any NA value.
+There is not any NA value.
 
 ###2.2. Multivariant homogeneity 
 
@@ -60,34 +62,37 @@ We can not accept the homogeneity assumption. We try to transform the data elimi
 outlier values.
 
 ```{r echo=FALSE, fig.height=15}
-par(mfrow = c(4, 1))
+par(mfrow = c(2, 2))
 boxplot(iris[1], iris[2], main = "Sepal.Width vs. Sepal.Length", col = "red", horizontal = TRUE)
 boxplot(iris[2], iris[3], main = "Petal.Length vs. Sepal.Width", col = "blue", horizontal = TRUE)
 boxplot(iris[3], iris[4], main = "Petal.Width vs. Petal.Length", col = "green", horizontal = TRUE)
 boxplot(iris[1], iris[4], main = "Sepal.Length vs. Petal.Width", col = "yellow", horizontal = TRUE)
+
 ```
-```{r message=FALSE, warning=FALSE, paged.print=FALSE, echo=FALSE}
-require(fBasics)
-```
+
 ```{r warning=FALSE}
 skewness(iris[1:4])
 outliers::outlier(iris[2])
 which(iris[2] >= 4.1 | iris[2] < 2.2) 
 iris[c(16, 33, 34, 61), 2] <- mean(iris[,2])
-
 iris2 <- cbind(log(iris[1]), iris[2], iris[3], iris[4])
 skewness(iris2[1:4])
 ```
-```{r echo=FALSE, warning=FALSE, fig.height=15}
-par(mfrow = c(4, 1))
-boxplot(iris2[1], iris2[2], main = "Sepal.Width vs. Sepal.Length", col = "red", horizontal = TRUE)
-boxplot(iris2[2], iris2[3], main = "Petal.Length vs. Sepal.Width", col = "blue", horizontal = TRUE)
-boxplot(iris2[3], iris2[4], main = "Petal.Width vs. Petal.Length", col = "green", horizontal = TRUE)
-boxplot(iris2[1], iris2[4], main = "Sepal.Length vs. Petal.Width", col = "yellow", horizontal = TRUE)
-
-```
 
 The two first variables are skewed to the right and the third one is skewed to the left.
+
+Let's try plotting some violin plots for the whole database.
+
+```{r}
+iris %>%
+  gather(key, value, Sepal.Length:Petal.Width) %>%
+  ggplot(aes(x = Species, y = value, fill = key)) +
+    geom_violin() +
+    theme_bw() +
+    labs(fill = 'Iris Species', y = '') +
+    facet_wrap(~ key)
+```
+
 ```{r warning=FALSE}
 iris.pars2 <- as.matrix(iris2)
 iris.pars.d2 <- dist(iris.pars2)

@@ -1,7 +1,4 @@
 ---
-title: "tumor"
----
----
 title: "Glioblastoma cancer clustering EDA"
 ---
 

@@ -353,6 +353,41 @@ $(document).ready(function () {
 <td align="right">0.2</td>
 <td align="left">setosa</td>
 </tr>
+<tr class="even">
+<td align="right">5.4</td>
+<td align="right">3.9</td>
+<td align="right">1.7</td>
+<td align="right">0.4</td>
+<td align="left">setosa</td>
+</tr>
+<tr class="odd">
+<td align="right">4.6</td>
+<td align="right">3.4</td>
+<td align="right">1.4</td>
+<td align="right">0.3</td>
+<td align="left">setosa</td>
+</tr>
+<tr class="even">
+<td align="right">5.0</td>
+<td align="right">3.4</td>
+<td align="right">1.5</td>
+<td align="right">0.2</td>
+<td align="left">setosa</td>
+</tr>
+<tr class="odd">
+<td align="right">4.4</td>
+<td align="right">2.9</td>
+<td align="right">1.4</td>
+<td align="right">0.2</td>
+<td align="left">setosa</td>
+</tr>
+<tr class="even">
+<td align="right">4.9</td>
+<td align="right">3.1</td>
+<td align="right">1.5</td>
+<td align="right">0.1</td>
+<td align="left">setosa</td>
+</tr>
 </tbody>
 </table>
 <div id="standarization-and-exploration" class="section level2">
@@ -371,7 +406,7 @@ table(gr)</code></pre>
 <p>###2.1. NA values</p>
 <pre class="r"><code>any(is.na(iris))</code></pre>
 <pre><code>## [1] FALSE</code></pre>
-<p>There are not any NA value.</p>
+<p>There is not any NA value.</p>
 <p>###2.2. Multivariant homogeneity</p>
 <pre class="r"><code>iris.pars &lt;- as.matrix(iris[, 1:4])
 iris.pars.d &lt;- dist(iris.pars)
@@ -423,13 +458,20 @@ iris.pars.d &lt;- dist(iris.pars)
 <pre class="r"><code>which(iris[2] &gt;= 4.1 | iris[2] &lt; 2.2) </code></pre>
 <pre><code>## [1] 16 33 34 61</code></pre>
 <pre class="r"><code>iris[c(16, 33, 34, 61), 2] &lt;- mean(iris[,2])
-
 iris2 &lt;- cbind(log(iris[1]), iris[2], iris[3], iris[4])
 skewness(iris2[1:4])</code></pre>
 <pre><code>## Sepal.Length  Sepal.Width Petal.Length  Petal.Width 
 ##   0.04272597   0.12722662  -0.26941093  -0.10091657</code></pre>
-<p><img src="LDA_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
 <p>The two first variables are skewed to the right and the third one is skewed to the left.</p>
+<p>Let’s try plotting some violin plots for the whole database.</p>
+<pre class="r"><code>iris %&gt;%
+  gather(key, value, Sepal.Length:Petal.Width) %&gt;%
+  ggplot(aes(x = Species, y = value, fill = key)) +
+    geom_violin() +
+    theme_bw() +
+    labs(fill = &#39;Iris Species&#39;, y = &#39;&#39;) +
+    facet_wrap(~ key)</code></pre>
+<p><img src="LDA_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
 <pre class="r"><code>iris.pars2 &lt;- as.matrix(iris2)
 iris.pars.d2 &lt;- dist(iris.pars2)
 (iris.MHV2 &lt;- betadisper(iris.pars.d2, gr))</code></pre>
@@ -474,7 +516,7 @@ iris.pars.d2 &lt;- dist(iris.pars2)
 <pre class="r"><code>par(mfrow = c(1, ncol(iris.pars2)))
 for(j in 1:ncol(iris.pars2)){
   hist(iris.pars2[,j])}</code></pre>
-<p><img src="LDA_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<p><img src="LDA_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
 <pre class="r"><code>mshapiro.test(t(iris.pars2))</code></pre>
 <pre><code>## 
 ##  Shapiro-Wilk normality test
@@ -495,7 +537,7 @@ for(j in 1:ncol(iris.pars2)){
 <pre class="r"><code>iris.pars3 &lt;- iris.pars[, -3]</code></pre>
 <p>###2.5. Linearity</p>
 <pre class="r"><code>psych::pairs.panels(iris[1:4], gap = 0, bg = c(&quot;red&quot;, &quot;blue&quot;, &quot;green&quot;)[iris$Species], pch = 21)</code></pre>
-<p><img src="LDA_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
+<p><img src="LDA_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
 <p>There are some non-linear relationships. We should try a KDA or K-mDA model instead. We will continue with our LDA model in light of example.</p>
 <p>##3- LDA model</p>
 <pre class="r"><code>iris.pars3.df &lt;- as.data.frame(iris.pars3)
