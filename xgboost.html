@@ -451,57 +451,6 @@ nrow(hyper_grid)</code></pre>
 <p>There are 4096 possible model combinations. That’s gonna take a bit to run…</p>
 <p>Now all we need is to create a for loop to iterate every possible combination of the previous grid.</p>
 <p>That took well over 1 hour to run on my laptop. Now let’s take a look at the best parameter combination to fit our predictive model.</p>
-<pre class="r"><code># Results in xgb.tune$evaluation_log!
-hyper_grid %&gt;%
-  dplyr::arrange(test_error_mean) %&gt;%
-  head(10)</code></pre>
-<pre><code>##     eta gamma max_depth min_child_weight subsample colsample_bytree
-## 1  0.10   1.2         7                1      1.00              0.9
-## 2  0.30   1.0         7                1      0.65              0.9
-## 3  0.30   1.2         5                3      1.00              0.8
-## 4  0.20   1.0         9                1      0.65              1.0
-## 5  0.20   1.5         9                1      0.80              0.9
-## 6  0.30   1.5         7                5      0.65              0.8
-## 7  0.10   0.5         5                1      0.80              1.0
-## 8  0.05   0.5         7                1      0.80              0.7
-## 9  0.10   0.5         9                1      1.00              0.8
-## 10 0.20   1.0         7                1      0.65              0.7
-##    test_error_mean
-## 1        0.1538028
-## 2        0.1560228
-## 3        0.1560288
-## 4        0.1560290
-## 5        0.1570472
-## 6        0.1571106
-## 7        0.1571148
-## 8        0.1583476
-## 9        0.1593200
-## 10       0.1593328</code></pre>
-<pre class="r"><code>hyper_grid %&gt;%
-  dplyr::arrange(test_error_mean) %&gt;%
-  tail(10)</code></pre>
-<pre><code>##       eta gamma max_depth min_child_weight subsample colsample_bytree
-## 4087 0.05   1.0         3                7       0.5              0.9
-## 4088 0.05   1.5         3                7       0.5              0.7
-## 4089 0.05   1.0         5                7       0.5              1.0
-## 4090 0.05   1.2         3                7       0.5              1.0
-## 4091 0.05   0.5         5                7       0.5              0.9
-## 4092 0.05   1.5         5                7       0.5              1.0
-## 4093 0.05   0.5         7                7       0.5              0.8
-## 4094 0.05   1.0         9                7       0.5              0.9
-## 4095 0.10   0.5         5                7       0.5              0.9
-## 4096 0.05   1.2         9                7       0.5              0.7
-##      test_error_mean
-## 4087       0.2076608
-## 4088       0.2087626
-## 4089       0.2087690
-## 4090       0.2097820
-## 4091       0.2133104
-## 4092       0.2145346
-## 4093       0.2154506
-## 4094       0.2154666
-## 4095       0.2154854
-## 4096       0.2223244</code></pre>
 <pre class="r"><code># Definitive model picking the best parameters
 params_final &lt;- list(
   eta = 0.05,
@@ -524,12 +473,12 @@ xgb.fit &lt;- xgb.cv(
   print_every_n = 100
 )</code></pre>
 <pre><code>## Warning in data.matrix(train_m[, -1]): NAs introduced by coercion</code></pre>
-<pre><code>## [1]  train-error:0.176784+0.044692   test-error:0.204031+0.079640 
+<pre><code>## [1]  train-error:0.171157+0.034002   test-error:0.200982+0.025079 
 ## Multiple eval metrics are present. Will use test_error for early stopping.
 ## Will train until test_error hasn&#39;t improved in 10 rounds.
 ## 
 ## Stopping. Best iteration:
-## [3]  train-error:0.141408+0.007210   test-error:0.167072+0.040905</code></pre>
+## [12] train-error:0.134682+0.004120   test-error:0.171711+0.023642</code></pre>
 <pre class="r"><code># Train error: 0.13, test error: 0.17</code></pre>
 </div>
 

@@ -127,7 +127,7 @@ There are 4096 possible model combinations. That's gonna take a bit to run...
 
 Now all we need is to create a for loop to iterate every possible combination of the previous grid.
 
-```{r include=FALSE}
+```{r eval=FALSE, include=FALSE}
 # 3. For loop (It took me 1 hour to run it!)
 # grid search 
 for (i in 1:nrow(hyper_grid)) {
@@ -154,10 +154,7 @@ for (i in 1:nrow(hyper_grid)) {
   hyper_grid$test_error_mean[i] <- min(xgb.tune$evaluation_log$test_error_mean)
 }
 ```
-
-That took well over 1 hour to run on my laptop. Now let's take a look at the best parameter combination to fit our predictive model.
-
-```{r}
+```{r eval=FALSE, include=FALSE}
 # Results in xgb.tune$evaluation_log!
 hyper_grid %>%
   dplyr::arrange(test_error_mean) %>%
@@ -167,6 +164,10 @@ hyper_grid %>%
   dplyr::arrange(test_error_mean) %>%
   tail(10)
 ```
+
+That took well over 1 hour to run on my laptop. Now let's take a look at the best parameter combination to fit our predictive model.
+
+
 
 ```{r}
 # Definitive model picking the best parameters
